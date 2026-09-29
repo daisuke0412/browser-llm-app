@@ -1,37 +1,60 @@
-# WebLLMテストアプリ
+# Browser LLM App
 
-MUIとWeb Workerを使ったWebLLM実験画面です。CSSファイルは使用せず、回答は未加工テキストで表示します。
-利用方法・モデル定義・ログ・検証範囲は[実装ガイド](docs/implementation.md)を参照してください。
+[WebLLM](https://webllm.mlc.ai/) をブラウザ上でお試しで動かすためのアプリです。React / TypeScript / Vite で作成しています。
 
-## ベーステンプレート: React + TypeScript + Vite
+**公開アプリ:** https://browser-llm-app-pearl.vercel.app/
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## できること
 
-Currently, two official plugins are available:
+- モデルを選択して読み込み、システムプロンプトとメッセージを入力して推論を実行する。
+- 任意の JSON Schema を指定して、構造化出力を試す。
+- 生成結果や実行ログを確認する。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+WebLLM の推論はブラウザ内で実行されるため、API キーは不要です。WebGPU 対応のブラウザ・GPU 環境が必要です。初回はモデルのダウンロードが発生し、モデルによって通信量やメモリ使用量が大きくなります。ダウンロード済みのモデルはキャッシュされます。
 
-## React Compiler
+## ローカルで起動
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Node.js と pnpm を用意し、このプロジェクトのディレクトリで実行してください。
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+pnpm install
+pnpm dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+ターミナルに表示される URL をブラウザで開いてください。
+
+## ディレクトリ構成
+
+```text
+browser-llm-app/
+├── src/                   # ブラウザアプリ本体
+│   ├── main.tsx           # アプリの起動
+│   ├── App.tsx            # ルートコンポーネント
+│   ├── components/        # 入力・出力・ログなどの画面コンポーネント
+│   ├── hooks/             # モデルの読み込みと推論実行の処理
+│   ├── workers/           # WebLLM を動かす Web Worker
+│   └── utils/             # 非同期処理などの共通ユーティリティ
+├── scripts/               # Claude / OpenAI API を使った検証用の Python スクリプト
+│   ├── call_claude.py     # Claude にサンプルのプロンプトを送信し、応答と処理時間を表示
+│   ├── call_openai.py     # OpenAI にサンプルのプロンプトを送信し、応答を表示
+│   └── evaluate.py        # WebLLM の出力を Claude / OpenAI で採点し、未採点の項目を更新
+├── logs/
+│   └── result_io.json     # 評価対象と結果を保存
+└── tests/                 # アプリのテスト
+```
+
+## Claude / OpenAI スクリプトの実行
+
+Python 環境を用意し、必要な SDK をインストールしてください。以下はプロジェクトのディレクトリで実行する例です。
+
+```powershell
+python -m pip install anthropic openai
+```
+
+**環境設定ファイルによる API キーの読み込みはありません。** CLI などで、実行するターミナルの環境変数に設定してください。
+
+| 実行対象 | 必要な環境変数 |
+| --- | --- |
+| Claude | `ANTHROPIC_API_KEY` |
+| OpenAI | `OPENAI_API_KEY` |
+| 両方の API による評価 | 上記の両方 |
